@@ -44,7 +44,7 @@ struct Matrix {
 struct TicTacToe {
     var matrix: Matrix
     
-    init(_ boardSize: BoardSize) {
+    init(boardSize: BoardSize) {
         matrix = Matrix(size: boardSize.rawValue)
     }
     
@@ -62,21 +62,26 @@ struct TicTacToe {
     func checkWinner(_ row: Int, _ column: Int) -> Bool {
         var isWinnerHorizon = false
         var isWinnerVertical = false
-        var isWinnerDiagram = false
+        var isWinnerDiagonal = false
+        var isWinnerDiagonalSecond = false
         
         if row == column {
-            isWinnerDiagram = checkDiagram()
+            isWinnerDiagonal = checkDiagonal()
+        }
+        
+        if row + column == matrix.size - 1 {
+            isWinnerDiagonalSecond = checkDiagonalSecond()
         }
         isWinnerHorizon = checkHorizon(row, column)
         isWinnerVertical = checkVertical(row, column)
         
-        if isWinnerVertical || isWinnerHorizon || isWinnerDiagram {
+        if isWinnerVertical || isWinnerHorizon || isWinnerDiagonal || isWinnerDiagonalSecond {
             return true
         }
         return false
     }
     
-    // MARK: - Private Func
+    // MARK: - Private Methods
     
     private func checkHorizon(_ row: Int, _ column: Int) -> Bool {
         for ind in 0..<matrix.size - 1 {
@@ -96,9 +101,18 @@ struct TicTacToe {
         return true
     }
     
-    private func checkDiagram() -> Bool {
+    private func checkDiagonal() -> Bool {
         for ind in 0..<matrix.size - 1 {
             if matrix[ind, ind] != matrix[ind + 1, ind + 1] {
+                return false
+            }
+        }
+        return true
+    }
+    
+    private func checkDiagonalSecond() -> Bool {
+        for ind in 0..<matrix.size - 1 {
+            if matrix[ind, matrix.size - 1 - ind] != matrix[ind + 1, matrix.size - 2 - ind] {
                 return false
             }
         }
@@ -163,7 +177,7 @@ struct TicTacToe {
 
 // MARK: - Matrix Console
 
-var game = TicTacToe(.small)
+var game = TicTacToe(boardSize: .small)//boardSize: .small, .middle, .large
 
 var userNameX = ""
 var userNameY = ""
@@ -181,37 +195,26 @@ gameLoop: while true {
     
     //read usernames
     if !greetedX {
-        guard let username = game.readUsername("player X") else {
-            print("\nGoodbye stranger...")
-            break gameLoop
-        }
-        
+        guard let username = game.readUsername("player X") else { break gameLoop }
         userNameX = username
         greetedX = true
     }
     
     if !greetedY {
-        guard let username = game.readUsername("player O") else {
-            print("\nGoodbye stranger...")
-            break gameLoop
-        }
-        
+        guard let username = game.readUsername("player O") else { break gameLoop }
         userNameY = username
         greetedY = true
-        print("\nStart Game \n")
+        print("\nStart Game \n\(game.matrixOutline(size: game.matrix.size))\n")
     }
     
     //read coordinate
     if !isStart {
-        guard let matrixCoordinate = game.readCoordinate(), game.matrix.indexIsValid(row: matrixCoordinate.row, column: matrixCoordinate.column) else {//, game.matrix.indexIsValid(row: matrixCoordinate.rows, column: matrixCoordinate.columns)
-            print("\n")
-            continue gameLoop
-        }
+        guard let matrixCoordinate = game.readCoordinate(), game.matrix.indexIsValid(row: matrixCoordinate.row, column: matrixCoordinate.column) else { continue gameLoop }
         
         if game.step(matrixCoordinate.row, matrixCoordinate.column, .X) {
             let checkValue = 2 * (startValue - 1)
             if checkValue >= 4 && game.checkWinner(matrixCoordinate.row, matrixCoordinate.column) {
-                print("\n\(userNameX)'s Winns \n")
+                print("\n\(userNameX)'s Wins \n")
                 break
             }
             isStart = true
@@ -219,15 +222,12 @@ gameLoop: while true {
             print("\n\(userNameY)'s turn\n")
         }
     } else {
-        guard let matrixCoordinate = game.readCoordinate(), game.matrix.indexIsValid(row: matrixCoordinate.row, column: matrixCoordinate.column) else {
-            print("\n")
-            continue gameLoop
-        }
+        guard let matrixCoordinate = game.readCoordinate(), game.matrix.indexIsValid(row: matrixCoordinate.row, column: matrixCoordinate.column) else { continue gameLoop }
         
         if game.step(matrixCoordinate.row, matrixCoordinate.column, .O) {
             let checkValue = 2 * (startValue - 1)
             if checkValue >= 4 && game.checkWinner(matrixCoordinate.row, matrixCoordinate.column) {
-                print("\n\(userNameY)'s Winns \n")
+                print("\n\(userNameY)'s Wins \n")
                 break
             }
             isStart = false
